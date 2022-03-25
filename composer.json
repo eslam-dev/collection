@@ -1,0 +1,29 @@
+{
+    "name": "eslam-dev/collection",
+    "description": "Collection library",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/eslam-dev/collection",
+    "autoload": {
+        "psr-4": {
+            "EslamDev\\Collection\\": "src/"
+        },
+        "files": [
+            "src/helper.php"
+          ]
+    },
+    "authors": [
+        {
+            "name": "eslam el sherif",
+            "email": "dev@eslamelsherif.com",
+            "homepage": "https://eslamelsherif.com/",
+            "role": "Developer"
+      
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0"
+
+    }
+    
+}
