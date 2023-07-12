@@ -25,7 +25,7 @@ class Collection
      */
     public function __construct($items = [])
     {
-        $this->items = json_decode(json_encode($items), true);
+        $this->items =  $this->isArray($items);
     }
 
     /**
@@ -46,7 +46,7 @@ class Collection
      */
     public function add($item)
     {
-        $this->items[] = json_decode(json_encode($item), true);
+        $this->items[] = $this->isArray($item);
 
         return $this;
     }
@@ -80,7 +80,7 @@ class Collection
 
     public function merge(array $array = [])
     {
-        $array = json_decode(json_encode($array), true);
+        $array =  $this->isArray($array);;
 
         $this->items =  array_merge($this->items, $array);
         return $this;
@@ -167,7 +167,7 @@ class Collection
             return !in_array($item[$key], $values);
         });
     }
-    
+
     /**
      * Order by.
      * @param string $col
@@ -188,6 +188,18 @@ class Collection
         }, $this->items), $dir, $this->items);
 
         return $this;
+    }
+    /**
+     * Verify that it's an array or convert to an array.
+     *
+     * @return this||array
+     */
+    private function isArray($items)
+    {
+        if (is_array($items)) {
+            return $items;
+        }
+        return  json_decode(json_encode($items), true);
     }
     /**
      * first item the collection.
@@ -226,6 +238,6 @@ class Collection
      */
     public function toArray()
     {
-        return json_decode(json_encode($this->items), true);
+        return  $this->isArray($this->items);
     }
 }
