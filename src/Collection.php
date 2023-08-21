@@ -96,7 +96,7 @@ class Collection
      */
     public function select($select)
     {
-  
+
         $this->items = array_map(function ($e) use ($select) {
             if (is_array($select)) {
                 $array_search = [];
@@ -233,10 +233,16 @@ class Collection
      */
     public function first()
     {
-        if (is_array($this->items)) {
-            return $this->items[0];
-        }
-        return null;
+        return reset($this->items);
+    }
+    /**
+     * end item the collection.
+     *
+     * @return this||void
+     */
+    public function end()
+    {
+        return end($this->items);
     }
     /**
      * get items the collection.
