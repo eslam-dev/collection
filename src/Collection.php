@@ -2,6 +2,9 @@
 
 namespace EslamDev\Collection;
 
+/**
+ * Summary of Collection
+ */
 class Collection
 {
     /**
@@ -25,6 +28,7 @@ class Collection
      */
     public function __construct($items = [])
     {
+        $items = json_decode(json_encode($items), true);
         $this->items =  $this->isArray($items);
     }
 
@@ -83,6 +87,27 @@ class Collection
         $array =  $this->isArray($array);;
 
         $this->items =  array_merge($this->items, $array);
+        return $this;
+    }
+    /**
+     * Summary of select
+     * @param mixed $select
+     * @return this
+     */
+    public function select($select)
+    {
+  
+        $this->items = array_map(function ($e) use ($select) {
+            if (is_array($select)) {
+                $array_search = [];
+                foreach ($select as $search) {
+                    $array_search[$search] = $e[$search];
+                }
+                return $array_search;
+            }
+            return [$select => $e[$select]];
+        }, $this->items);
+
         return $this;
     }
 
