@@ -112,6 +112,20 @@ class Collection
     }
 
     /**
+     * Summary of like
+     * @param mixed $patron
+     * @return static
+     */
+    public function like($key,$patron)
+    {
+        $this->filter(function ($value) use ($patron,$key) {
+            return 1 === preg_match(sprintf('/^%s$/i', preg_replace('/(^%)|(%$)/', '.*', $patron)), $value[$key]);
+        });
+        return $this;
+    }
+
+
+    /**
      * where item the collection.
      *
      * @param  string $key
