@@ -14,6 +14,12 @@ class Collection
      */
     protected $items = [];
     /**
+     * The real Items contained in the collection.
+     *
+     * @var array
+     */
+    protected $realItems = [];
+    /**
      * The type of items in the collection.
      *
      */
@@ -30,6 +36,7 @@ class Collection
     {
         $items = json_decode(json_encode($items), true);
         $this->items =  $this->isArray($items);
+        $this->realItems = $this->items;
     }
 
     /**
@@ -51,6 +58,7 @@ class Collection
     public function add($item)
     {
         $this->items[] = $this->isArray($item);
+        $this->realItems = $this->items;
 
         return $this;
     }
@@ -73,6 +81,17 @@ class Collection
     {
 
         $this->items = array_filter($this->items, $callable);
+        return $this;
+    }
+    /**
+     * Summary of map
+     * @param callable $callable
+     * @return static
+     */
+    public function map(callable $callable)
+    {
+
+        $this->items = array_filter(array_map($callable, $this->items));
         return $this;
     }
     /**
@@ -116,9 +135,9 @@ class Collection
      * @param mixed $patron
      * @return static
      */
-    public function like($key,$patron)
+    public function like($key, $patron)
     {
-        $this->filter(function ($value) use ($patron,$key) {
+        $this->filter(function ($value) use ($patron, $key) {
             return 1 === preg_match(sprintf('/^%s$/i', preg_replace('/(^%)|(%$)/', '.*', $patron)), $value[$key]);
         });
         return $this;
@@ -205,6 +224,42 @@ class Collection
         $this->filter(function ($item) use ($key, $values) {
             return !in_array($item[$key], $values);
         });
+    }
+    /**
+     * Summary of update
+     * @param array $data
+     * @param mixed $key
+     * @param mixed $value
+     * @return static
+     */
+    public function update(array $data = [], $key, $value)
+    {
+        $this->map(function ($item) use ($data, $key, $value) {
+            if ($item[$key] == $value) {
+
+                return array_merge($item, $data);
+            }
+            return $item;
+        });
+
+        return $this;
+    }
+    /**
+     * Summary of delete
+     * @param mixed $key
+     * @param mixed $value
+     * @return static
+     */
+    public function delete($key, $value)
+    {
+        $this->map(function ($item) use ($key, $value) {
+            if ($item[$key] == $value) {
+                unset($item);
+            }
+            return $item;
+        });
+
+        return $this;
     }
 
     /**
