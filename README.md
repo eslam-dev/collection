@@ -6,116 +6,115 @@
 
 ## About
 
-eslam-dev/collection is a PHP library for representing and manipulating collections.
+
+`eslam-dev/collection` is a powerful PHP library for managing and manipulating collections. It provides an elegant API for working with arrays and objects, featuring advanced filtering, mapping, grouping, and transformation methods.
 
 ## Installation
+------------
 
-Install this package as a dependency using [Composer](https://getcomposer.org).
+Install the package using [Composer](https://getcomposer.org):
 
-```bash
-composer require eslam-dev/collection
-```
+    composer require eslam-dev/collection
 
 ## Usage
+-----
 
 ### Generic Collection
 
-the collect helper returns a new EslamDev\Collection instance for the given array. So, creating a collection is as simple as:
-
+The `collect` helper creates a new instance of the `EslamDev\Collection` class for the given array:
 ```php
-
 $collect = collect([
-    ['id' => 1, 'name' => 'admin'   , 'type' => 'admin'],
-    ['id' => 2, 'name' => 'admin 2' , 'type' => 'admin'],
-    ['id' => 3, 'name' => 'admin 3' , 'type' => 'admin'],
-    ['id' => 4, 'name' => 'admin 4' , 'type' => 'admin'],
-    ['id' => 5, 'name' => 'user 1'  , 'type' => 'user' ],
-    ['id' => 6, 'name' => 'user 2'  , 'type' => 'user' ],
-    ['id' => 7, 'name' => 'user 3'  , 'type' => 'user' ],
+    ['id' => 1, 'name' => 'admin', 'type' => 'admin'],
+    ['id' => 2, 'name' => 'admin 2', 'type' => 'admin'],
+    ['id' => 3, 'name' => 'admin 3', 'type' => 'admin'],
+    ['id' => 4, 'name' => 'admin 4', 'type' => 'admin'],
+    ['id' => 5, 'name' => 'user 1', 'type' => 'user'],
 ]);
-
 ```
+Methods and Examples
+--------------------
 
 ### Methods
 
 
 #### #merge
 
+
+Merge additional items into the collection:
 ```php
 $collect->merge([
-     ['id' => 8, 'name' => 'user 4', 'type' => 'user'],
-     ['id' => 9, 'name' => 'user 5', 'type' => 'user'],
+    ['id' => 8, 'name' => 'user 4', 'type' => 'user'],
+    ['id' => 9, 'name' => 'user 5', 'type' => 'user'],
 ]);
 ```
+### #add
 
-#### #add
-
+Add a single item to the collection:
 ```php
 $collect->add(['id' => 10, 'name' => 'user 6', 'type' => 'user']);
 ```
+### #count
 
-#### #count
-
+Count the total number of items in the collection:
 ```php
 $collect->count();
 ```
+### #where
 
-#### #where
-
+Filter the collection by a specific key-value pair:
 ```php
-$collect->where('type','user');
+$collect->where('type', 'user');
 ```
+### #like
 
-#### #like
-
+Filter items using a pattern. You can use `%` as a wildcard:
 ```php
-$collect->like('type','user');
-# can like by array
-$collect->like('type',['user','admin']);
+$collect->like('type', 'user');
+// Supports array patterns
+$collect->like('type', ['user', 'admin']);
 ```
+### #whereIn
 
-#### #whereIn
-
+Filter items where the key matches any value in an array:
 ```php
-$collect->whereIn('id',[1,2,3,4]);
+$collect->whereIn('id', [1, 2, 3, 4]);
 ```
+### #whereNotIn
 
-#### #whereNotIn
-
+Filter items where the key does not match any value in an array:
 ```php
-$collect->whereNotIn('id',[5,3,7]);
+$collect->whereNotIn('id', [5, 3, 7]);
 ```
+### #orderBy
 
-#### #orderBy
-
+Sort the collection by a specific key and direction:
 ```php
-$collect->orderBy('id','desc');
+$collect->orderBy('id', 'desc');
 ```
+### #first
 
-#### #first
-
+Get the first item in the collection:
 ```php
 $collect->first();
 ```
+### #toArray
 
-
-#### #all
-
-```php
-$collect->all();
-```
-
-#### #toArray
-
+Convert the collection into an array:
 ```php
 $collect->toArray();
 ```
-#### #toObject
+### #toObject
 
+Convert the collection into an object:
 ```php
 $collect->toObject();
 ```
-## Copyright and License
+License
+-------
 
-The eslam-dev/collection library is copyright © [Eslam El Sherif](https://eslamelsherif.com)
-and licensed for use under the terms of the MIT License (MIT).
+The `eslam-dev/collection` library is licensed under the MIT License. See the `LICENSE` file for details.
+
+Author
+------
+
+This library is developed and maintained by [Eslam El Sherif](https://eslamelsherif.com).

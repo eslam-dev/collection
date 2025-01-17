@@ -233,6 +233,136 @@ class Collection implements IteratorAggregate
         });
         return $this;
     }
+    /**
+     * Chunk the collection into arrays of the specified size.
+     * @param int $size
+     * @return array
+     */
+    public function chunk(int $size): array
+    {
+        if ($size <= 0) {
+            throw new InvalidArgumentException("Chunk size must be greater than 0.");
+        }
+
+        return array_chunk($this->items, $size);
+    }
+    /**
+     * Check if the collection contains a specific value.
+     * @param mixed $value
+     * @param string|null $key
+     * @return bool
+     */
+    public function contains(mixed $value, string $key = null): bool
+    {
+        if ($key === null) {
+            return in_array($value, $this->items, true);
+        }
+
+        foreach ($this->items as $item) {
+            if (($item[$key] ?? null) === $value) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    /**
+     * Group the collection by a given key.
+     * @param string $key
+     * @return array
+     */
+    public function groupBy(string $key): array
+    {
+        $grouped = [];
+
+        foreach ($this->items as $item) {
+            $groupValue = $item[$key] ?? null;
+            $grouped[$groupValue][] = $item;
+        }
+
+        return $grouped;
+    }
+    /**
+     * Get the values of a specific key from all items.
+     * @param string $key
+     * @return array
+     */
+    public function pluck(string $key): array
+    {
+        return array_map(function ($item) use ($key) {
+            return $item[$key] ?? null;
+        }, $this->items);
+    }
+    /**
+     * Reduce the collection to a single value using a callback.
+     * @param callable $callback
+     * @param mixed $initial
+     * @return mixed
+     */
+    public function reduce(callable $callback, mixed $initial = null): mixed
+    {
+        return array_reduce($this->items, $callback, $initial);
+    }
+    /**
+     * Reverse the order of the items in the collection.
+     * @return self
+     */
+    public function reverse(): self
+    {
+        $this->items = array_reverse($this->items);
+        return $this;
+    }
+    /**
+     * Get unique items in the collection based on a key.
+     * @param string|null $key
+     * @return self
+     */
+    public function unique(string $key = null): self
+    {
+        if ($key === null) {
+            $this->items = array_unique($this->items, SORT_REGULAR);
+        } else {
+            $seen = [];
+            $this->items = array_filter($this->items, function ($item) use ($key, &$seen) {
+                $value = $item[$key] ?? null;
+                if (in_array($value, $seen, true)) {
+                    return false;
+                }
+                $seen[] = $value;
+                return true;
+            });
+        }
+
+        return $this;
+    }
+    /**
+     * Check if the collection is empty.
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        return empty($this->items);
+    }
+    /**
+     * Convert the collection to JSON.
+     * @return string
+     */
+    public function toJson(): string
+    {
+        return json_encode($this->items, JSON_PRETTY_PRINT);
+    }
+    /**
+     * Execute a callback over each item.
+     * @param callable $callback
+     * @return self
+     */
+    public function each(callable $callback): self
+    {
+        foreach ($this->items as $key => $item) {
+            $callback($item, $key);
+        }
+        return $this;
+    }
 
     /**
      * Filter items using a pattern.
