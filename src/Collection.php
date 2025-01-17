@@ -21,7 +21,9 @@ class Collection implements IteratorAggregate
      */
     public function __construct(iterable $items = [])
     {
-        $this->items = $this->toArray($items);
+        $this->items = array_map(function ($item) {
+            return is_object($item) ? json_decode(json_encode($item), true) : $item;
+        }, $this->toArray($items));
     }
 
     /**
@@ -40,6 +42,9 @@ class Collection implements IteratorAggregate
      */
     public function add(mixed $item): self
     {
+        if (is_object($item)) {
+            $item = json_decode(json_encode($item), true);
+        }
         $this->items[] = $item;
         return $this;
     }
@@ -417,20 +422,24 @@ class Collection implements IteratorAggregate
 
     /**
      * Convert items to an array.
-     * @param iterable $items
+     * @param array|object $items
      * @return array
      */
-    private function toArray(iterable $items): array
+    private function toArray(array|object $items): array
     {
         if (is_array($items)) {
             return $items;
+        }
+
+        if (is_object($items)) {
+            return json_decode(json_encode($items), true);
         }
 
         if ($items instanceof \Traversable) {
             return iterator_to_array($items);
         }
 
-        throw new InvalidArgumentException("Items must be an array or iterable.");
+        throw new InvalidArgumentException("Items must be an array, object, or iterable.");
     }
 
     /**
