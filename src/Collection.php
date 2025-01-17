@@ -2,342 +2,313 @@
 
 namespace EslamDev\Collection;
 
+use InvalidArgumentException;
+use IteratorAggregate;
+use ArrayIterator;
+
 /**
- * Summary of Collection
+ * Class Collection
+ * A flexible and extensible collection handler.
  */
-class Collection
+class Collection implements IteratorAggregate
 {
-    /**
-     * The items contained in the collection.
-     *
-     * @var array
-     */
-    protected $items = [];
-    /**
-     * The real Items contained in the collection.
-     *
-     * @var array
-     */
-    protected $realItems = [];
-    /**
-     * The type of items in the collection.
-     *
-     */
-    protected $itemsType = 'array';
-
+    protected array $items = [];
+    protected string $itemsType = 'array';
 
     /**
-     * Create a new collection.
-     *
-     * @param  mixed  $items
-     * @return void
+     * Constructor
+     * @param iterable|array $items
      */
-    public function __construct($items = [])
+    public function __construct(iterable $items = [])
     {
-        $items = json_decode(json_encode($items), true);
-        $this->items =  $this->isArray($items);
-        $this->realItems = $this->items;
+        $this->items = $this->toArray($items);
     }
 
     /**
-     * Get all of the items in the collection.
-     *
+     * Get all items in the collection.
      * @return array
      */
-    public function all()
+    public function all(): array
     {
         return $this->items;
     }
 
     /**
-     * Add item to the collection.
-     *
-     * @param  mixed  $item
-     * @return this
+     * Add an item to the collection.
+     * @param mixed $item
+     * @return self
      */
-    public function add($item)
+    public function add(mixed $item): self
     {
-        $this->items[] = $this->isArray($item);
-        $this->realItems = $this->items;
-
+        $this->items[] = $item;
         return $this;
     }
+
     /**
-     * count item in the collection.
-     *
-     * @return count
+     * Count items in the collection.
+     * @return int
      */
-    public function count()
+    public function count(): int
     {
         return count($this->items);
     }
-    /**
-     * filter item in the collection.
-     *
-     * @param  callable  $callable
-     * @return this
-     */
-    public function filter(callable $callable)
-    {
 
-        $this->items = array_filter($this->items, $callable);
+    /**
+     * Filter items based on a callback.
+     * @param callable $callback
+     * @return self
+     */
+    public function filter(callable $callback): self
+    {
+        $this->items = array_filter($this->items, $callback, ARRAY_FILTER_USE_BOTH);
         return $this;
     }
-    /**
-     * Summary of map
-     * @param callable $callable
-     * @return static
-     */
-    public function map(callable $callable)
-    {
 
-        $this->items = array_filter(array_map($callable, $this->items));
+    /**
+     * Map items using a callback.
+     * @param callable $callback
+     * @return self
+     */
+    public function map(callable $callback): self
+    {
+        $this->items = array_map($callback, $this->items);
         return $this;
     }
+
     /**
-     * merge item in the collection.
-     *
-     * @param  mixed  $array
-     * @return this
+     * Merge another array or iterable into the collection.
+     * @param array $array
+     * @return self
      */
-
-    public function merge(array $array = [])
+    public function merge(array $array): self
     {
-        $array =  $this->isArray($array);;
-
-        $this->items =  array_merge($this->items, $array);
+        $this->items = array_merge($this->items, $this->toArray($array));
         return $this;
     }
-    /**
-     * Summary of select
-     * @param mixed $select
-     * @return this
-     */
-    public function select($select)
-    {
 
-        $this->items = array_map(function ($e) use ($select) {
-            if (is_array($select)) {
-                $array_search = [];
-                foreach ($select as $search) {
-                    $array_search[$search] = $e[$search];
-                }
-                return $array_search;
+    /**
+     * Select specific keys from items.
+     * @param string|string[] $keys
+     * @return self
+     */
+    public function select(string|array $keys): self
+    {
+        $this->items = array_map(function ($item) use ($keys) {
+            $keys = (array)$keys;
+            return array_intersect_key($item, array_flip($keys));
+        }, $this->items);
+        return $this;
+    }
+
+    /**
+     * Filter items by a key and value condition.
+     * @param string $key
+     * @param string|null $operator
+     * @param mixed|null $value
+     * @return self
+     */
+    public function where(string $key, string $operator = null, mixed $value = null): self
+    {
+        if ($value === null && $operator === null) {
+            $value = true;
+            $operator = '==';
+        }
+        if ($value === null) {
+            $value = $operator;
+            $operator = '==';
+        }
+
+        $this->operatorForWhere($key, $operator, $value);
+        return $this;
+    }
+
+    /**
+     * Filter items based on a specific operator.
+     * @param string $key
+     * @param string $operator
+     * @param mixed $value
+     */
+    private function operatorForWhere(string $key, string $operator, mixed $value): void
+    {
+        $this->filter(function ($item) use ($key, $value, $operator) {
+            $itemValue = $item[$key] ?? null;
+
+            switch ($operator) {
+                case '!=':
+                    return $itemValue != $value;
+                case '<':
+                    return $itemValue < $value;
+                case '>':
+                    return $itemValue > $value;
+                case '<=':
+                    return $itemValue <= $value;
+                case '>=':
+                    return $itemValue >= $value;
+                case '===':
+                    return $itemValue === $value;
+                case '!==':
+                    return $itemValue !== $value;
+                default:
+                case '=':
+                case '==':
+                    return $itemValue == $value;
             }
-            return [$select => $e[$select]];
+        });
+    }
+
+    /**
+     * Filter items by a set of values.
+     * @param string $key
+     * @param array $values
+     * @return self
+     */
+    public function whereIn(string $key, array $values): self
+    {
+        $this->filter(function ($item) use ($key, $values) {
+            return in_array($item[$key] ?? null, $values);
+        });
+        return $this;
+    }
+
+    /**
+     * Exclude items by a set of values.
+     * @param string $key
+     * @param array $values
+     * @return self
+     */
+    public function whereNotIn(string $key, array $values): self
+    {
+        $this->filter(function ($item) use ($key, $values) {
+            return !in_array($item[$key] ?? null, $values);
+        });
+        return $this;
+    }
+
+    /**
+     * Update items that match a condition.
+     * @param array $data
+     * @param string $key
+     * @param mixed $value
+     * @return self
+     */
+    public function update(array $data, string $key, mixed $value): self
+    {
+        $this->items = array_map(function ($item) use ($data, $key, $value) {
+            if (($item[$key] ?? null) == $value) {
+                return array_merge($item, $data);
+            }
+            return $item;
         }, $this->items);
 
         return $this;
     }
 
     /**
-     * Summary of like
-     * @param mixed $patron
-     * @return static
-     */
-    public function like($key, $patron)
-    {
-        $this->filter(function ($value) use ($patron, $key) {
-            return 1 === preg_match(sprintf('/^%s$/i', preg_replace('/(^%)|(%$)/', '.*', $patron)), $value[$key]);
-        });
-        return $this;
-    }
-
-
-    /**
-     * where item the collection.
-     *
-     * @param  string $key
-     * @param  string|null  $operator
-     * @param  string|null  $value
-     * @return $this
-     */
-    public function where($key, $operator = null, $value = null)
-    {
-        if ($value == null and $operator == null) {
-            $value = true;
-            $operator = '==';
-        }
-        if ($value == null) {
-            $value = $operator;
-            $operator = '==';
-        }
-        $this->operatorForWhere($key, $operator, $value);
-        return $this;
-    }
-    /**
-     * Get an operator checker callback.
-     *
-     * @param  string $key
-     * @param  string|null  $operator
-     * @param  string|null  $value
-     * @return void
-     */
-    private function operatorForWhere($key, $operator = null, $value = null)
-    {
-        $this->filter(function ($item) use ($key, $value, $operator) {
-            switch ($operator) {
-                case '!=':
-                    return $item[$key] != $value;
-                case '<':
-                    return $item[$key] < $value;
-                case '>':
-                    return $item[$key] > $value;
-                case '<=':
-                    return $item[$key] <= $value;
-                case '>=':
-                    return $item[$key] >= $value;
-                case '===':
-                    return $item[$key] === $value;
-                case '!==':
-                    return $item[$key] !== $value;
-                default:
-                case '=':
-                case '==':
-                    return $item[$key] == $value;
-            }
-        });
-    }
-
-    /**
-     * Filter items by selected key value pair.
-     *
-     * @param  string  $key
-     * @param  mixed  $values
-     * @return void
-     */
-    public function whereIn($key, array $values = [])
-    {
-        $this->filter(function ($item) use ($key, $values) {
-            return in_array($item[$key], $values);
-        });
-    }
-    /**
-     * Filter items by selected key value pair.
-     *
-     * @param  string  $key
-     * @param  mixed  $values
-     * @return void
-     */
-    public function whereNotIn($key, array $values = [])
-    {
-        $this->filter(function ($item) use ($key, $values) {
-            return !in_array($item[$key], $values);
-        });
-    }
-    /**
-     * Summary of update
-     * @param array $data
-     * @param mixed $key
+     * Delete items that match a condition.
+     * @param string $key
      * @param mixed $value
-     * @return static
+     * @return self
      */
-    public function update(array $data = [], $key, $value)
+    public function delete(string $key, mixed $value): self
     {
-        $this->map(function ($item) use ($data, $key, $value) {
-            if ($item[$key] == $value) {
-
-                return array_merge($item, $data);
-            }
-            return $item;
-        });
-
-        return $this;
-    }
-    /**
-     * Summary of delete
-     * @param mixed $key
-     * @param mixed $value
-     * @return static
-     */
-    public function delete($key, $value)
-    {
-        $this->map(function ($item) use ($key, $value) {
-            if ($item[$key] == $value) {
-                unset($item);
-            }
-            return $item;
+        $this->items = array_filter($this->items, function ($item) use ($key, $value) {
+            return ($item[$key] ?? null) != $value;
         });
 
         return $this;
     }
 
     /**
-     * Order by.
-     * @param string $col
-     * @param string $dir
-     * @return this
+     * Sort the collection by a column.
+     * @param string $column
+     * @param string $direction
+     * @return self
      */
-    function orderBy($col, $dir = 'asc')
+    public function orderBy(string $column, string $direction = 'asc'): self
     {
-        $sort = [
-            'asc' => SORT_ASC,
-            'desc' => SORT_DESC,
-        ];
-
-        $dir = isset($sort[$dir]) ? $sort[$dir] : SORT_ASC;
-
-        array_multisort(array_map(function ($item) use ($col) {
-            return $item[$col];
-        }, $this->items), $dir, $this->items);
-
+        usort($this->items, function ($a, $b) use ($column, $direction) {
+            return $direction === 'asc'
+                ? $a[$column] <=> $b[$column]
+                : $b[$column] <=> $a[$column];
+        });
         return $this;
     }
+
     /**
-     * Verify that it's an array or convert to an array.
-     *
-     * @return this||array
+     * Filter items using a pattern.
+     * @param string $key
+     * @param string $pattern
+     * @return self
      */
-    private function isArray($items)
+    public function like(string $key, string $pattern): self
+    {
+        $regex = '/^' . str_replace('%', '.*', preg_quote($pattern, '/')) . '$/i';
+        $this->filter(function ($item) use ($key, $regex) {
+            return isset($item[$key]) && preg_match($regex, $item[$key]);
+        });
+        return $this;
+    }
+
+    /**
+     * Get the first item.
+     * @return mixed|null
+     */
+    public function first(): mixed
+    {
+        return $this->items[0] ?? null;
+    }
+
+    /**
+     * Get the last item.
+     * @return mixed|null
+     */
+    public function last(): mixed
+    {
+        return end($this->items) ?: null;
+    }
+
+    /**
+     * Get all items in the collection (alias of all).
+     * @return array
+     */
+    public function get(): array
+    {
+        return $this->all();
+    }
+
+    /**
+     * Convert items to an object.
+     * @return object
+     */
+    public function toObject(): object
+    {
+        return json_decode(json_encode($this->items));
+    }
+
+    /**
+     * Convert items to an array.
+     * @param iterable $items
+     * @return array
+     */
+    private function toArray(iterable $items): array
     {
         if (is_array($items)) {
             return $items;
         }
-        return  json_decode(json_encode($items), true);
+
+        if ($items instanceof \Traversable) {
+            return iterator_to_array($items);
+        }
+
+        throw new InvalidArgumentException("Items must be an array or iterable.");
     }
+
     /**
-     * first item the collection.
-     *
-     * @return this||void
+     * Get an iterator for the collection.
+     * @return ArrayIterator
      */
-    public function first()
+    public function getIterator(): ArrayIterator
     {
-        return reset($this->items);
-    }
-    /**
-     * end item the collection.
-     *
-     * @return this||void
-     */
-    public function end()
-    {
-        return end($this->items);
-    }
-    /**
-     * get items the collection.
-     *
-     * @return this items
-     */
-    public function get()
-    {
-        return $this->items;
-    }
-    /**
-     * get items the collection.
-     *
-     * @return object
-     */
-    public function toObject()
-    {
-        return json_decode(json_encode($this->items));
-    }
-    /**
-     * get items the collection.
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        return  $this->isArray($this->items);
+        return new ArrayIterator($this->items);
     }
 }
