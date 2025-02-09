@@ -390,7 +390,7 @@ class Collection implements IteratorAggregate
      */
     public function first(): mixed
     {
-        return $this->items[0] ?? null;
+        return reset($this->items);
     }
 
     /**
